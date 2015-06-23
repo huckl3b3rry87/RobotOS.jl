@@ -72,13 +72,25 @@ isless{T<:TVal}(t1::T, t2::T) = to_nsec(t1) < to_nsec(t2)
 
 type Rate
     o::PyObject
+    freq_hz::Float64
+    Rate(hz::Real) = new(__rospy__.Rate(hz), hz)
 end
-Rate(hz::Real) = Rate(__rospy__.Rate(hz))
 Rate(d::Duration) = Rate(1.0/to_sec(d))
 
 type Timer
-    t::PyObject
+    o::PyObject
+    cb::Function
+    function Timer(period, cb, oneshot=false)
+        jl_cb(tev::PyObject) = cb(convert(TimerEvent, tev))
+        new(__rospy__.Timer(
+            convert(PyObject, Duration(period)), jl_cb, oneshot),
+            jl_cb)
+    end
 end
+Timer(rate::Rate, cb, oneshot=false) = Timer(1.0/rate.freq_hz, cb, oneshot)
+
+shutdown(t::Timer) = pycall(t.o["shutdown"], PyAny)
+run(t::Timer) = pycall(t.o["run"], PyAny)
 
 type TimerEvent
     last_expected::Time
@@ -86,6 +98,15 @@ type TimerEvent
     current_expected::Time
     current_real::Time
     last_duration::Duration
+end
+function convert(::Type{TimerEvent}, pyo::PyObject)
+    TimerEvent(
+        Time(pyo[:last_expected]),
+        Time(pyo[:last_real]),
+        Time(pyo[:current_expected]),
+        Time(pyo[:current_real]),
+        Duration(pyo[:last_duration]),
+    )
 end
 
 function get_rostime()
