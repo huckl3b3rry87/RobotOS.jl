@@ -3,6 +3,8 @@ julia:
   - nightly
   - release
   - 0.3
+python:
+  - 3.5
 sudo: required
 dist: trusty
 before_install:
