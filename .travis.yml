@@ -14,6 +14,7 @@ before_install:
   - sudo apt-get -y install ros-indigo-ros-base ros-indigo-common-msgs
   - sudo rosdep init
   - rosdep update
+  - export PYTHON=""
 before_script:
   - source /opt/ros/indigo/setup.sh
   - roscore &
