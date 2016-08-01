@@ -543,22 +543,23 @@ function _collectdeps{S<:AbstractString}(pkgs::Dict{S, ROSPackage})
     deps
 end
 
+function trecurse!(currlist, d, t)
+    if !(t in currlist)
+        if haskey(d, t) #do dependencies first
+            for dt in d[t]
+                if dt != t
+                    trecurse!(currlist, d, dt)
+                end
+            end
+            #Now it's ok to add it
+            push!(currlist, t)
+        end
+    end
+end
+
 #Produce an order of the keys of d that respect their dependencies.
 #Assumed to be Dict(String => Iterable{String})
 function _order(d::Dict)
-    trecurse!(currlist, d, t) = begin
-        if !(t in currlist)
-            if haskey(d, t) #do dependencies first
-                for dt in d[t]
-                    if dt != t
-                        trecurse!(currlist, d, dt)
-                    end
-                end
-                #Now it's ok to add it
-                push!(currlist, t)
-            end
-        end
-    end
     tlist = AbstractString[]
     for t in keys(d)
         trecurse!(tlist, d, t)

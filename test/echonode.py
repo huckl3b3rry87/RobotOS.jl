@@ -10,6 +10,7 @@ from nav_msgs.srv import GetPlan, GetPlanRequest, GetPlanResponse
 class Echo(object):
     def __init__(self):
         self._pub = rospy.Publisher("poses", PoseStamped, queue_size=10)
+        self._vpub = rospy.Publisher("poses", Vector3, queue_size=10)
         self._sub = rospy.Subscriber("vectors", Vector3, self.msg_cb, queue_size=10)
 
         self._srvlisten = rospy.Service("callme", Empty, self.srv_cb)
@@ -23,6 +24,10 @@ class Echo(object):
         pmsg.pose.position.y = msg.y
         pmsg.pose.position.z = msg.z
         self._pub.publish(pmsg)
+
+    def repub(self, msg):
+        nmsg = Vector3(msg.x, msg.y, msg.z)
+        self._vpub.publish(nmsg)
 
     def srv_cb(self, req):
         self._calltimer = rospy.Timer(rospy.Duration(2.0), self.callsrv, oneshot=True)
